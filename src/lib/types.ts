@@ -16,7 +16,8 @@ export type Report = {
   locationDetails: string;
   imageUrl: string;
   imageHint: string;
-  timestamp: string;
+  reportDate: string; // Changed from timestamp to reportDate
+  timestamp: any; // Keep for Firestore serverTimestamp, but don't use for ordering
   status: 'Reported' | 'Rescued' | 'In Treatment' | 'Resolved';
   needsHumanAttention: boolean;
   reason: string;

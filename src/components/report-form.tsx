@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -69,11 +68,12 @@ export function ReportForm() {
       const reportData = {
         userId: user.uid,
         userContact: values.reporterContact,
-        animalType: 'Unknown', // TODO: Add animal type detection or a dropdown
+        animalType: 'Unknown',
         conditionReport: values.conditionReport,
         locationDetails: values.locationDetails,
-        imageUrl: 'https://picsum.photos/seed/' + Date.now() + '/600/400', // TODO: Implement actual image upload
-        imageHint: 'animal', // TODO: Extract from animal type
+        imageUrl: 'https://picsum.photos/seed/' + Date.now() + '/600/400',
+        imageHint: 'animal',
+        reportDate: new Date().toISOString(), // Add a consistent date string for ordering
         timestamp: serverTimestamp(),
         status: 'Reported',
         needsHumanAttention: aiResponse.needsHumanAttention,
@@ -89,12 +89,7 @@ export function ReportForm() {
         title: 'Success!',
         description: `Report submitted! AI assessment: ${aiResponse.reason}`,
       });
-      form.reset({
-        conditionReport: '',
-        locationDetails: '',
-        reporterContact: user.email || '',
-        image: undefined,
-      });
+      form.reset();
       
     } catch (error: any) {
       console.error('Error submitting report:', error);
@@ -150,7 +145,7 @@ export function ReportForm() {
                   <FormItem>
                   <FormLabel>Upload Photo</FormLabel>
                     <FormControl>
-                        <Input type="file" value={field.value?.fileName} onChange={(e) => field.onChange(e.target.files?.[0])} />
+                        <Input type="file" onChange={(e) => field.onChange(e.target.files?.[0])} />
                     </FormControl>
                     <p className="text-xs text-muted-foreground">A photo greatly helps our rescue teams.</p>
                   <FormMessage />
