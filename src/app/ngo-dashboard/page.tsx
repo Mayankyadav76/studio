@@ -20,7 +20,7 @@ export default function NGODashboardPage() {
 
   const formattedReports = reports?.map(report => ({
     ...report,
-    reportDate: report.timestamp ? report.timestamp.toDate().toISOString() : new Date().toISOString(),
+    reportDate: report.timestamp ? new Date(report.timestamp.seconds * 1000).toISOString() : new Date().toISOString(),
   })) || [];
 
 
