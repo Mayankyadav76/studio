@@ -27,9 +27,11 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import Link from "next/link";
 import { Separator } from "./ui/separator";
-import { useAuth, useUser } from "@/firebase";
+import { useAuth, useUser, useDoc, useFirestore } from "@/firebase";
 import { signOut } from "firebase/auth";
 import { Skeleton } from "./ui/skeleton";
+import { useMemoFirebase } from "@/firebase/provider";
+import { doc } from "firebase/firestore";
 
 const menuItems = [
   { href: "/dashboard", icon: <FileText />, label: "Report Animal", roles: ["user"] },
@@ -39,18 +41,19 @@ const menuItems = [
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user, loading, error } = useUser();
+  const { user: authUser, loading: authLoading, error: authError } = useUser();
   const auth = useAuth();
   const router = useRouter();
+  const firestore = useFirestore();
 
-  // This is a mock role switching logic for demo purposes
-  // TODO: Replace with real role from user data
-  let currentRole = "user";
-  if(pathname.includes('ngo')){
-    currentRole = 'ngo';
-  } else if (pathname.includes('hospital')){
-    currentRole = 'hospital';
-  }
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !authUser) return null;
+    return doc(firestore, "users", authUser.uid);
+  }, [firestore, authUser]);
+
+  const { data: userProfile, isLoading: profileLoading } = useDoc<{ userType: string }>(userDocRef);
+  
+  const loading = authLoading || profileLoading;
 
   const handleLogout = async () => {
     if (auth) {
@@ -59,6 +62,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const currentRole = userProfile?.userType || 'user';
   const availableMenuItems = menuItems.filter(item => item.roles.includes(currentRole));
   
   if (loading) {
@@ -78,7 +82,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (error || !user) {
+  if (authError || !authUser) {
     // Redirect to login if not authenticated
     if (typeof window !== "undefined") {
       router.push('/login');
@@ -125,11 +129,11 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             <Separator className="my-2" />
              <div className="flex items-center gap-3 p-2">
                 <Avatar>
-                    <AvatarImage src={user.photoURL || `https://picsum.photos/seed/${user.uid}/40/40`} />
-                    <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
+                    <AvatarImage src={authUser.photoURL || `https://picsum.photos/seed/${authUser.uid}/40/40`} />
+                    <AvatarFallback>{authUser.email?.[0].toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-foreground">{user.displayName || user.email}</span>
+                    <span className="text-sm font-semibold text-foreground">{userProfile?.firstName || authUser.email}</span>
                     <span className="text-xs text-muted-foreground">{currentRole.toUpperCase()}</span>
                 </div>
             </div>
