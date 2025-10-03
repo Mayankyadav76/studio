@@ -63,7 +63,7 @@ export async function submitReport(prevState: State, formData: FormData): Promis
         reason: aiResponse.reason,
     };
     
-    const reportsCollection = collection(firestore, 'animal_condition_reports');
+    const reportsCollection = collection(firestore, 'reports');
     await addDoc(reportsCollection, reportData);
     
     revalidatePath("/ngo-dashboard");
