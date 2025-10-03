@@ -1,9 +1,9 @@
 
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
+import { useFormStatus } from "react-dom";
 import { submitReport, type State } from "@/lib/actions";
-import { useEffect } from "react";
+import { useEffect, useActionState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -26,7 +26,7 @@ function SubmitButton() {
 export function ReportForm() {
   const { user } = useUser();
   const initialState: State = { message: null, errors: {} };
-  const [state, dispatch] = useFormState(submitReport, initialState);
+  const [state, dispatch] = useActionState(submitReport, initialState);
   const { toast } = useToast();
 
   useEffect(() => {
