@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "User": {
@@ -51,9 +52,7 @@
         "userType",
         "firstName",
         "lastName",
-        "email",
-        "phone",
-        "address"
+        "email"
       ]
     },
     "AnimalConditionReport": {
@@ -109,8 +108,6 @@
         "id",
         "userId",
         "reportDate",
-        "latitude",
-        "longitude",
         "animalType",
         "conditionDescription",
         "imageURL",
@@ -303,18 +300,14 @@
         }
       },
       {
-        "path": "/users/{userId}/animal_condition_reports/{reportId}",
+        "path": "/animal_condition_reports/{reportId}",
         "definition": {
           "entityName": "AnimalConditionReport",
           "schema": {
             "$ref": "#/backend/entities/AnimalConditionReport"
           },
-          "description": "Stores animal condition reports submitted by users. Nested under user documents for path-based ownership and simplified security rules.",
+          "description": "Stores animal condition reports submitted by users.",
           "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user who submitted the report."
-            },
             {
               "name": "reportId",
               "description": "The unique identifier for the animal condition report."

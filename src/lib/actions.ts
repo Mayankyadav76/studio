@@ -1,13 +1,17 @@
+
 "use server";
 
 import { z } from "zod";
 import { prioritizeUrgentReports } from "@/ai/flows/prioritize-urgent-reports";
 import { revalidatePath } from "next/cache";
+import { getFirestore, addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { initializeFirebase } from "@/firebase";
 
 const ReportSchema = z.object({
   conditionReport: z.string().min(10, { message: "Please provide a detailed description." }),
   locationDetails: z.string().min(5, { message: "Please provide specific location details." }),
   reporterContact: z.string().email({ message: "Please provide a valid email." }),
+  userId: z.string().min(1, { message: "User ID is required." }),
 });
 
 export type State = {
@@ -15,6 +19,7 @@ export type State = {
     conditionReport?: string[];
     locationDetails?: string[];
     reporterContact?: string[];
+    userId?: string[];
   };
   message?: string | null;
 };
@@ -24,6 +29,7 @@ export async function submitReport(prevState: State, formData: FormData) {
     conditionReport: formData.get("conditionReport"),
     locationDetails: formData.get("locationDetails"),
     reporterContact: formData.get("reporterContact"),
+    userId: formData.get("userId"),
   });
 
   if (!validatedFields.success) {
@@ -33,19 +39,32 @@ export async function submitReport(prevState: State, formData: FormData) {
     };
   }
 
-  const { conditionReport, locationDetails, reporterContact } = validatedFields.data;
+  const { conditionReport, locationDetails, reporterContact, userId } = validatedFields.data;
 
   try {
-    console.log("Submitting report to AI for prioritization...");
     const aiResponse = await prioritizeUrgentReports({
       conditionReport,
       locationDetails,
       reporterContact,
     });
-    console.log("AI Prioritization complete:", aiResponse);
-
+    
     // In a real application, you would save the report and the AI response to your database here.
-    // For now, we'll just log it to the console.
+    const { firestore } = initializeFirebase();
+    const reportData = {
+        userId,
+        userContact: reporterContact,
+        animalType: "Unknown", // Placeholder, could be extracted by another AI call
+        conditionReport,
+        locationDetails,
+        imageUrl: "https://picsum.photos/seed/1/600/400", // Placeholder for uploaded image
+        imageHint: "animal",
+        timestamp: serverTimestamp(),
+        status: 'Reported',
+        needsHumanAttention: aiResponse.needsHumanAttention,
+        reason: aiResponse.reason,
+    };
+
+    await addDoc(collection(firestore, 'animal_condition_reports'), reportData);
     
     revalidatePath("/ngo-dashboard");
 

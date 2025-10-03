@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useFormState, useFormStatus } from "react-dom";
@@ -11,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { Terminal } from "lucide-react";
+import { useUser } from "@/firebase";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -22,6 +24,7 @@ function SubmitButton() {
 }
 
 export function ReportForm() {
+  const { user } = useUser();
   const initialState: State = { message: null, errors: {} };
   const [state, dispatch] = useFormState(submitReport, initialState);
   const { toast } = useToast();
@@ -45,6 +48,7 @@ export function ReportForm() {
 
   return (
     <form action={dispatch}>
+       <input type="hidden" name="userId" value={user?.uid || ''} />
       <Card className="w-full max-w-2xl mx-auto">
         <CardHeader>
           <CardTitle className="font-headline text-3xl">Report an Animal in Need</CardTitle>
@@ -86,7 +90,7 @@ export function ReportForm() {
               name="reporterContact"
               type="email"
               placeholder="you@example.com"
-              defaultValue="user@example.com"
+              defaultValue={user?.email || ""}
               required
             />
              {state.errors?.reporterContact && <p className="text-sm font-medium text-destructive">{state.errors.reporterContact}</p>}
