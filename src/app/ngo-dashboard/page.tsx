@@ -20,7 +20,6 @@ export default function NGODashboardPage() {
 
   const formattedReports = reports?.map(report => ({
     ...report,
-    // Ensure reportDate is a valid string for the ReportCard component
     reportDate: report.timestamp?.toDate?.().toISOString() || new Date().toISOString(),
   })) || [];
 
