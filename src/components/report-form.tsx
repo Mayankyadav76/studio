@@ -73,7 +73,6 @@ export function ReportForm() {
         locationDetails: values.locationDetails,
         imageUrl: 'https://picsum.photos/seed/' + Date.now() + '/600/400',
         imageHint: 'animal',
-        reportDate: new Date().toISOString(), // Add a consistent date string for ordering
         timestamp: serverTimestamp(),
         status: 'Reported',
         needsHumanAttention: aiResponse.needsHumanAttention,

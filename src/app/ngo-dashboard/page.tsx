@@ -13,12 +13,17 @@ export default function NGODashboardPage() {
 
   const reportsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    return query(collection(firestore, "animal_condition_reports"), orderBy("reportDate", "desc"));
+    return query(collection(firestore, "animal_condition_reports"), orderBy("timestamp", "desc"));
   }, [firestore]);
   
   const { data: reports, isLoading, error } = useCollection<Report>(reportsQuery);
 
-  const formattedReports = reports || [];
+  const formattedReports = reports?.map(report => ({
+    ...report,
+    // Ensure reportDate is a valid string for the ReportCard component
+    reportDate: report.timestamp?.toDate?.().toISOString() || new Date().toISOString(),
+  })) || [];
+
 
   return (
     <>
