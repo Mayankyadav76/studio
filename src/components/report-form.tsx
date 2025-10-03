@@ -43,18 +43,6 @@ export function ReportForm() {
     },
   });
 
-  // Keep defaultValues in sync with user email
-  useEffect(() => {
-    if (user?.email) {
-      form.reset({
-        reporterContact: user.email,
-        conditionReport: form.getValues('conditionReport'),
-        locationDetails: form.getValues('locationDetails'),
-        image: form.getValues('image'),
-      });
-    }
-  }, [user, form]);
-
   const onSubmit = async (values: ReportFormValues) => {
     if (!user || !firestore) {
       setSubmissionError('You must be logged in to submit a report.');
@@ -104,8 +92,6 @@ export function ReportForm() {
       
     } catch (error: any) {
       console.error('Error submitting report:', error);
-      // addDocumentNonBlocking uses the errorEmitter, which is caught by FirebaseErrorListener.
-      // This fallback message is for other potential errors.
       setSubmissionError(error.message || 'An error occurred while submitting the report. The error has been logged.');
     }
   };
@@ -173,7 +159,13 @@ export function ReportForm() {
                 <FormItem>
                   <FormLabel>Your Contact Email</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="you@example.com" {...field} />
+                    <Input 
+                      key={user?.email || 'guest'}
+                      type="email" 
+                      placeholder="you@example.com" 
+                      {...field}
+                      defaultValue={user?.email || ''}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
