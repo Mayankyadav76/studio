@@ -64,7 +64,6 @@ export async function submitReport(prevState: State, formData: FormData): Promis
     };
     
     const reportsCollection = collection(firestore, 'animal_condition_reports');
-    // Using await here because this is a server action. Non-blocking is for client-side optimistic updates.
     await addDoc(reportsCollection, reportData);
     
     revalidatePath("/ngo-dashboard");
@@ -74,9 +73,6 @@ export async function submitReport(prevState: State, formData: FormData): Promis
     console.error("Error during report submission:", error);
     return { 
         message: "An error occurred while submitting the report. Please try again.",
-        errors: {
-            // you can add more specific error keys if needed
-        }
     };
   }
 }
