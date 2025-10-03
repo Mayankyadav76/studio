@@ -22,6 +22,7 @@ export type State = {
     userId?: string[];
   };
   message?: string | null;
+  success?: boolean;
 };
 
 export async function submitReport(prevState: State, formData: FormData): Promise<State> {
@@ -36,6 +37,7 @@ export async function submitReport(prevState: State, formData: FormData): Promis
     return {
       errors: validatedFields.error.flatten().fieldErrors,
       message: "Missing Fields. Failed to Submit Report.",
+      success: false,
     };
   }
 
@@ -68,11 +70,15 @@ export async function submitReport(prevState: State, formData: FormData): Promis
     
     revalidatePath("/ngo-dashboard");
 
-    return { message: `Report submitted successfully! Priority assessment: ${aiResponse.reason}` };
+    return { 
+        message: `Report submitted! AI assessment: ${aiResponse.reason}`,
+        success: true,
+    };
   } catch (error) {
     console.error("Error during report submission:", error);
     return { 
         message: "An error occurred while submitting the report. Please try again.",
+        success: false,
     };
   }
 }

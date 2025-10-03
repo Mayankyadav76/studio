@@ -3,7 +3,8 @@
 
 import { useFormStatus } from "react-dom";
 import { submitReport, type State } from "@/lib/actions";
-import { useEffect, useActionState, useRef } from "react";
+import { useEffect, useRef } from "react";
+import { useActionState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -32,18 +33,18 @@ export function ReportForm() {
 
   useEffect(() => {
     if (state.message) {
-      if (state.errors && Object.keys(state.errors).length > 0) {
-        toast({
-          variant: "destructive",
-          title: "Error submitting report",
-          description: state.message,
-        });
-      } else {
+      if (state.success) {
         toast({
           title: "Success!",
           description: state.message,
         });
         formRef.current?.reset();
+      } else {
+         toast({
+          variant: "destructive",
+          title: "Error submitting report",
+          description: state.message,
+        });
       }
     }
   }, [state, toast]);
@@ -98,7 +99,7 @@ export function ReportForm() {
              {state.errors?.reporterContact && <p className="text-sm font-medium text-destructive">{state.errors.reporterContact}</p>}
           </div>
 
-          {state.message && state.errors && Object.keys(state.errors).length > 0 && (
+          {state.message && !state.success && (
              <Alert variant="destructive">
                 <Terminal className="h-4 w-4" />
                 <AlertTitle>Submission Error</AlertTitle>
