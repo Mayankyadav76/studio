@@ -98,7 +98,7 @@ export function ReportForm() {
       
     } catch (error: any) {
       console.error('Error submitting report:', error);
-      setSubmissionError(error.message || 'An error occurred while submitting the report. The error has been logged.');
+      setSubmissionError(error.message || 'An error occurred while submitting the report. Please try again.');
     }
   };
 
@@ -150,7 +150,7 @@ export function ReportForm() {
                   <FormItem>
                   <FormLabel>Upload Photo</FormLabel>
                     <FormControl>
-                        <Input type="file" {...field} />
+                        <Input type="file" value={field.value?.fileName} onChange={(e) => field.onChange(e.target.files?.[0])} />
                     </FormControl>
                     <p className="text-xs text-muted-foreground">A photo greatly helps our rescue teams.</p>
                   <FormMessage />
