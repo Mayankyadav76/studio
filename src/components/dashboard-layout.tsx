@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Sidebar,
   SidebarHeader,
@@ -18,7 +18,7 @@ import { Logo } from "@/components/logo";
 import {
   Home,
   FileText,
-  HeartHand,
+  HeartHandshake,
   Users,
   Hospital,
   LogOut,
@@ -27,20 +27,24 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import Link from "next/link";
 import { Separator } from "./ui/separator";
+import { useAuth, useUser } from "@/firebase";
+import { signOut } from "firebase/auth";
+import { Skeleton } from "./ui/skeleton";
 
 const menuItems = [
   { href: "/dashboard", icon: <FileText />, label: "Report Animal", roles: ["user"] },
-  { href: "/ngo-dashboard", icon: <HeartHand />, label: "Rescue Dashboard", roles: ["ngo"] },
+  { href: "/ngo-dashboard", icon: <HeartHandshake />, label: "Rescue Dashboard", roles: ["ngo"] },
   { href: "/hospital-dashboard", icon: <Hospital />, label: "Hospital Dashboard", roles: ["hospital"] },
 ];
 
-// In a real app, you would get this from your auth context
-const userRole: "user" | "ngo" | "hospital" = "user";
-
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { user, loading, error } = useUser();
+  const auth = useAuth();
+  const router = useRouter();
 
   // This is a mock role switching logic for demo purposes
+  // TODO: Replace with real role from user data
   let currentRole = "user";
   if(pathname.includes('ngo')){
     currentRole = 'ngo';
@@ -48,8 +52,40 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     currentRole = 'hospital';
   }
 
+  const handleLogout = async () => {
+    if (auth) {
+      await signOut(auth);
+      router.push('/');
+    }
+  };
+
   const availableMenuItems = menuItems.filter(item => item.roles.includes(currentRole));
   
+  if (loading) {
+    return (
+      <div className="flex h-screen w-full">
+        <div className="w-64 border-r p-4 hidden md:block">
+          <Skeleton className="h-10 w-40 mb-8" />
+          <div className="space-y-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        </div>
+        <div className="flex-1 p-8">
+          <Skeleton className="h-full w-full" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !user) {
+    // Redirect to login if not authenticated
+    if (typeof window !== "undefined") {
+      router.push('/login');
+    }
+    return null; // Render nothing while redirecting
+  }
+
   return (
     <SidebarProvider>
       <Sidebar>
@@ -80,22 +116,20 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                     </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                    <Link href="/" className="w-full" prefetch={false}>
-                        <SidebarMenuButton tooltip="Log Out">
-                            <LogOut />
-                            <span>Log Out</span>
-                        </SidebarMenuButton>
-                    </Link>
+                  <SidebarMenuButton onClick={handleLogout} tooltip="Log Out">
+                      <LogOut />
+                      <span>Log Out</span>
+                  </SidebarMenuButton>
                 </SidebarMenuItem>
             </SidebarMenu>
             <Separator className="my-2" />
              <div className="flex items-center gap-3 p-2">
                 <Avatar>
-                    <AvatarImage src="https://picsum.photos/seed/avatar/40/40" />
-                    <AvatarFallback>U</AvatarFallback>
+                    <AvatarImage src={user.photoURL || `https://picsum.photos/seed/${user.uid}/40/40`} />
+                    <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-foreground">Demo User</span>
+                    <span className="text-sm font-semibold text-foreground">{user.displayName || user.email}</span>
                     <span className="text-xs text-muted-foreground">{currentRole.toUpperCase()}</span>
                 </div>
             </div>

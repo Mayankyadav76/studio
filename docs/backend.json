@@ -1,0 +1,348 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user in the Animal Rescue Connect application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user.",
+          "format": "uuid"
+        },
+        "userType": {
+          "type": "string",
+          "description": "The type of user (e.g., 'user', 'ngo', 'hospital').",
+          "format": "string"
+        },
+        "firstName": {
+          "type": "string",
+          "description": "User's first name."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "User's last name."
+        },
+        "email": {
+          "type": "string",
+          "description": "User's email address.",
+          "format": "email"
+        },
+        "phone": {
+          "type": "string",
+          "description": "User's phone number."
+        },
+        "address": {
+          "type": "string",
+          "description": "User's address."
+        },
+        "ngoId": {
+          "type": "string",
+          "description": "Reference to NGO if the user is an NGO representative. (Relationship: NGO 1:N User)"
+        },
+        "hospitalId": {
+          "type": "string",
+          "description": "Reference to Hospital if the user is a hospital representative. (Relationship: Hospital 1:N User)"
+        }
+      },
+      "required": [
+        "id",
+        "userType",
+        "firstName",
+        "lastName",
+        "email",
+        "phone",
+        "address"
+      ]
+    },
+    "AnimalConditionReport": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AnimalConditionReport",
+      "type": "object",
+      "description": "Represents a report of an animal's condition submitted by a user.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the animal condition report."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the User who submitted the report. (Relationship: User 1:N AnimalConditionReport)"
+        },
+        "reportDate": {
+          "type": "string",
+          "description": "Date and time when the report was submitted.",
+          "format": "date-time"
+        },
+        "latitude": {
+          "type": "number",
+          "description": "Latitude of the animal's location."
+        },
+        "longitude": {
+          "type": "number",
+          "description": "Longitude of the animal's location."
+        },
+        "animalType": {
+          "type": "string",
+          "description": "Type of animal (e.g., dog, cat, bird)."
+        },
+        "conditionDescription": {
+          "type": "string",
+          "description": "Description of the animal's condition."
+        },
+        "imageURL": {
+          "type": "string",
+          "description": "URL of the uploaded image of the animal.",
+          "format": "uri"
+        },
+        "ngoId": {
+          "type": "string",
+          "description": "Reference to the NGO assigned to rescue the animal. (Relationship: NGO 1:N AnimalConditionReport)"
+        },
+        "rescueStatus": {
+          "type": "string",
+          "description": "Status of the rescue (e.g., 'pending', 'rescued', 'treatment')."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "reportDate",
+        "latitude",
+        "longitude",
+        "animalType",
+        "conditionDescription",
+        "imageURL",
+        "rescueStatus"
+      ]
+    },
+    "NGO": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "NGO",
+      "type": "object",
+      "description": "Represents a Non-Governmental Organization involved in animal rescue.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the NGO."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the NGO."
+        },
+        "email": {
+          "type": "string",
+          "description": "NGO's email address.",
+          "format": "email"
+        },
+        "phone": {
+          "type": "string",
+          "description": "NGO's phone number."
+        },
+        "address": {
+          "type": "string",
+          "description": "NGO's address."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the NGO and its mission."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email",
+        "phone",
+        "address",
+        "description"
+      ]
+    },
+    "Hospital": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Hospital",
+      "type": "object",
+      "description": "Represents a hospital providing treatment to rescued animals.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the hospital."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the hospital."
+        },
+        "email": {
+          "type": "string",
+          "description": "Hospital's email address.",
+          "format": "email"
+        },
+        "phone": {
+          "type": "string",
+          "description": "Hospital's phone number."
+        },
+        "address": {
+          "type": "string",
+          "description": "Hospital's address."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the hospital and its services."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email",
+        "phone",
+        "address",
+        "description"
+      ]
+    },
+    "TreatmentRecord": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "TreatmentRecord",
+      "type": "object",
+      "description": "Represents a treatment record for a rescued animal at a hospital.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the treatment record."
+        },
+        "animalConditionReportId": {
+          "type": "string",
+          "description": "Reference to the Animal Condition Report associated with this treatment. (Relationship: AnimalConditionReport 1:N TreatmentRecord)"
+        },
+        "hospitalId": {
+          "type": "string",
+          "description": "Reference to the Hospital providing the treatment. (Relationship: Hospital 1:N TreatmentRecord)"
+        },
+        "treatmentDate": {
+          "type": "string",
+          "description": "Date of the treatment.",
+          "format": "date-time"
+        },
+        "diagnosis": {
+          "type": "string",
+          "description": "Diagnosis of the animal's condition."
+        },
+        "treatmentDescription": {
+          "type": "string",
+          "description": "Description of the treatment provided."
+        },
+        "outcome": {
+          "type": "string",
+          "description": "Outcome of the treatment (e.g., 'recovered', 'ongoing')."
+        }
+      },
+      "required": [
+        "id",
+        "animalConditionReportId",
+        "hospitalId",
+        "treatmentDate",
+        "diagnosis",
+        "treatmentDescription",
+        "outcome"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user data. Includes denormalized 'userType' for role-based authorization.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/ngos/{ngoId}",
+        "definition": {
+          "entityName": "NGO",
+          "schema": {
+            "$ref": "#/backend/entities/NGO"
+          },
+          "description": "Stores NGO data.",
+          "params": [
+            {
+              "name": "ngoId",
+              "description": "The unique identifier for the NGO."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/hospitals/{hospitalId}",
+        "definition": {
+          "entityName": "Hospital",
+          "schema": {
+            "$ref": "#/backend/entities/Hospital"
+          },
+          "description": "Stores hospital data.",
+          "params": [
+            {
+              "name": "hospitalId",
+              "description": "The unique identifier for the hospital."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/animal_condition_reports/{reportId}",
+        "definition": {
+          "entityName": "AnimalConditionReport",
+          "schema": {
+            "$ref": "#/backend/entities/AnimalConditionReport"
+          },
+          "description": "Stores animal condition reports submitted by users. Nested under user documents for path-based ownership and simplified security rules.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user who submitted the report."
+            },
+            {
+              "name": "reportId",
+              "description": "The unique identifier for the animal condition report."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/hospitals/{hospitalId}/treatment_records/{treatmentId}",
+        "definition": {
+          "entityName": "TreatmentRecord",
+          "schema": {
+            "$ref": "#/backend/entities/TreatmentRecord"
+          },
+          "description": "Stores treatment records for animals at hospitals. Nested under hospital documents.",
+          "params": [
+            {
+              "name": "hospitalId",
+              "description": "The unique identifier for the hospital providing the treatment."
+            },
+            {
+              "name": "treatmentId",
+              "description": "The unique identifier for the treatment record."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to ensure authorization independence, clarity, and scalability. User data, NGOs, Hospitals, Animal Condition Reports, and Treatment Records are stored in separate collections to maintain a homogeneous security posture. User-owned data (AnimalConditionReports) are nested under the user's document to simply security rules based on path-based ownership.  Authorization Independence is achieved by denormalizing user roles directly into documents where that data is required for authorization decisions. This eliminates the need for `get()` calls in security rules, which in turn supports atomic operations and simplifies debugging. The structure also supports the required QAPs. Specifically, path-based ownership of AnimalConditionReports by Users enables secure list operations. NGOs and Hospitals do not have path-based ownership. Role-based access is enabled by the `userType` property on the User document."
+  }
+}
