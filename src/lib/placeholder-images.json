@@ -1,3 +1,34 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "hero-dog",
+      "description": "A friendly dog looking at the camera.",
+      "imageUrl": "https://images.unsplash.com/photo-1534361960057-19889db9621e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxoYXBweSUyMGRvZ3xlbnwwfHx8fDE3NTk0MzA3MDJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "happy dog"
+    },
+    {
+      "id": "report-cat-1",
+      "description": "A stray cat with a slight injury on its ear.",
+      "imageUrl": "https://images.unsplash.com/photo-1598557825158-4358bc557f6c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxzdHJheSUyMGNhdHxlbnwwfHx8fDE3NTk1MDU4NzR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "stray cat"
+    },
+    {
+      "id": "report-dog-1",
+      "description": "A lost dog looking scared in an urban environment.",
+      "imageUrl": "https://images.unsplash.com/photo-1579369418715-d2559e1f9bfe?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxsb3N0JTIwZG9nfGVufDB8fHx8MTc1OTUwNTg3NHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "lost dog"
+    },
+    {
+      "id": "report-bird-1",
+      "description": "A pigeon with a broken wing on the pavement.",
+      "imageUrl": "https://images.unsplash.com/photo-1583868805970-5212c3123d34?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxpbmp1cmVkJTIwYmlyZHxlbnwwfHx8fDE3NTk1MDU4NzR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "injured bird"
+    },
+    {
+      "id": "report-dog-2",
+      "description": "A malnourished puppy found abandoned.",
+      "imageUrl": "https://images.unsplash.com/photo-1649025657092-14d136fbfa4c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxzYWQlMjBwdXBweXxlbnwwfHx8fDE3NTk1MDU4NzR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "sad puppy"
+    }
+  ]
 }
