@@ -3,7 +3,7 @@
 
 import { useFormStatus } from "react-dom";
 import { submitReport, type State } from "@/lib/actions";
-import { useEffect, useActionState } from "react";
+import { useEffect, useActionState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -25,16 +25,17 @@ function SubmitButton() {
 
 export function ReportForm() {
   const { user } = useUser();
+  const formRef = useRef<HTMLFormElement>(null);
   const initialState: State = { message: null, errors: {} };
   const [state, dispatch] = useActionState(submitReport, initialState);
   const { toast } = useToast();
 
   useEffect(() => {
     if (state.message) {
-      if(state.errors) {
+      if (state.errors && Object.keys(state.errors).length > 0) {
         toast({
           variant: "destructive",
-          title: "Error",
+          title: "Error submitting report",
           description: state.message,
         });
       } else {
@@ -42,12 +43,13 @@ export function ReportForm() {
           title: "Success!",
           description: state.message,
         });
+        formRef.current?.reset();
       }
     }
   }, [state, toast]);
 
   return (
-    <form action={dispatch}>
+    <form ref={formRef} action={dispatch}>
        <input type="hidden" name="userId" value={user?.uid || ''} />
       <Card className="w-full max-w-2xl mx-auto">
         <CardHeader>
@@ -96,10 +98,10 @@ export function ReportForm() {
              {state.errors?.reporterContact && <p className="text-sm font-medium text-destructive">{state.errors.reporterContact}</p>}
           </div>
 
-          {!state.errors && state.message && (
-             <Alert>
+          {state.message && state.errors && Object.keys(state.errors).length > 0 && (
+             <Alert variant="destructive">
                 <Terminal className="h-4 w-4" />
-                <AlertTitle>Report Submitted!</AlertTitle>
+                <AlertTitle>Submission Error</AlertTitle>
                 <AlertDescription>
                     {state.message}
                 </AlertDescription>

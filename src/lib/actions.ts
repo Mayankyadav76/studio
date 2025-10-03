@@ -4,9 +4,8 @@
 import { z } from "zod";
 import { prioritizeUrgentReports } from "@/ai/flows/prioritize-urgent-reports";
 import { revalidatePath } from "next/cache";
-import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { getFirestore, collection, serverTimestamp } from "firebase/firestore";
-import { initializeFirebase } from "@/firebase";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { initializeFirebase } from "@/firebase/server-init";
 
 const ReportSchema = z.object({
   conditionReport: z.string().min(10, { message: "Please provide a detailed description." }),
@@ -25,7 +24,7 @@ export type State = {
   message?: string | null;
 };
 
-export async function submitReport(prevState: State, formData: FormData) {
+export async function submitReport(prevState: State, formData: FormData): Promise<State> {
   const validatedFields = ReportSchema.safeParse({
     conditionReport: formData.get("conditionReport"),
     locationDetails: formData.get("locationDetails"),
@@ -65,13 +64,19 @@ export async function submitReport(prevState: State, formData: FormData) {
     };
     
     const reportsCollection = collection(firestore, 'animal_condition_reports');
-    addDocumentNonBlocking(reportsCollection, reportData);
+    // Using await here because this is a server action. Non-blocking is for client-side optimistic updates.
+    await addDoc(reportsCollection, reportData);
     
     revalidatePath("/ngo-dashboard");
 
     return { message: `Report submitted successfully! Priority assessment: ${aiResponse.reason}` };
   } catch (error) {
     console.error("Error during report submission:", error);
-    return { message: "An error occurred while submitting the report. Please try again." };
+    return { 
+        message: "An error occurred while submitting the report. Please try again.",
+        errors: {
+            // you can add more specific error keys if needed
+        }
+    };
   }
 }
