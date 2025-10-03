@@ -38,10 +38,16 @@ export function ReportForm() {
     defaultValues: {
       conditionReport: '',
       locationDetails: '',
-      reporterContact: user?.email || '',
+      reporterContact: '',
       image: undefined,
     },
   });
+
+  useEffect(() => {
+    if (user?.email) {
+      form.setValue('reporterContact', user.email);
+    }
+  }, [user, form.setValue]);
 
   const onSubmit = async (values: ReportFormValues) => {
     if (!user || !firestore) {
@@ -160,11 +166,9 @@ export function ReportForm() {
                   <FormLabel>Your Contact Email</FormLabel>
                   <FormControl>
                     <Input 
-                      key={user?.email || 'guest'}
                       type="email" 
                       placeholder="you@example.com" 
                       {...field}
-                      defaultValue={user?.email || ''}
                     />
                   </FormControl>
                   <FormMessage />
