@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -39,13 +39,19 @@ export function ReportForm() {
       conditionReport: '',
       locationDetails: '',
       reporterContact: user?.email || '',
+      image: undefined,
     },
   });
 
   // Keep defaultValues in sync with user email
   useEffect(() => {
     if (user?.email) {
-      form.reset({ reporterContact: user.email });
+      form.reset({
+        reporterContact: user.email,
+        conditionReport: form.getValues('conditionReport'),
+        locationDetails: form.getValues('locationDetails'),
+        image: form.getValues('image'),
+      });
     }
   }, [user, form]);
 
@@ -69,11 +75,11 @@ export function ReportForm() {
       const reportData = {
         userId: user.uid,
         userContact: values.reporterContact,
-        animalType: 'Unknown',
+        animalType: 'Unknown', // TODO: Add animal type detection or a dropdown
         conditionReport: values.conditionReport,
         locationDetails: values.locationDetails,
-        imageUrl: 'https://picsum.photos/seed/' + Date.now() + '/600/400',
-        imageHint: 'animal',
+        imageUrl: 'https://picsum.photos/seed/' + Date.now() + '/600/400', // TODO: Implement actual image upload
+        imageHint: 'animal', // TODO: Extract from animal type
         timestamp: serverTimestamp(),
         status: 'Reported',
         needsHumanAttention: aiResponse.needsHumanAttention,
@@ -89,13 +95,17 @@ export function ReportForm() {
         title: 'Success!',
         description: `Report submitted! AI assessment: ${aiResponse.reason}`,
       });
-      form.reset();
+      form.reset({
+        conditionReport: '',
+        locationDetails: '',
+        reporterContact: user.email || '',
+        image: undefined,
+      });
       
     } catch (error: any) {
       console.error('Error submitting report:', error);
-      // The addDocumentNonBlocking function will use the errorEmitter,
-      // which is caught by FirebaseErrorListener.
-      // We can also show a fallback error message here.
+      // addDocumentNonBlocking uses the errorEmitter, which is caught by FirebaseErrorListener.
+      // This fallback message is for other potential errors.
       setSubmissionError(error.message || 'An error occurred while submitting the report. The error has been logged.');
     }
   };
