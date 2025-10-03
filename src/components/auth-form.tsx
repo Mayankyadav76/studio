@@ -32,12 +32,13 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { useAuth } from '@/firebase';
+import { useAuth, useFirestore, setDocumentNonBlocking } from '@/firebase';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
+import { doc } from 'firebase/firestore';
 
 const registerSchema = z
   .object({
@@ -71,6 +72,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   const isRegister = mode === 'register';
   const router = useRouter();
   const auth = useAuth();
+  const firestore = useFirestore();
   const { toast } = useToast();
 
   const form = useForm({
@@ -85,7 +87,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   });
 
   const onSubmit = async (values: z.infer<typeof registerSchema> | z.infer<typeof loginSchema>) => {
-    if (!auth) {
+    if (!auth || !firestore) {
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -96,8 +98,20 @@ export function AuthForm({ mode }: AuthFormProps) {
     
     try {
       if (isRegister) {
-        const { email, password } = values as z.infer<typeof registerSchema>;
-        await createUserWithEmailAndPassword(auth, email, password);
+        const { email, password, name, role } = values as z.infer<typeof registerSchema>;
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        const userDocRef = doc(firestore, 'users', user.uid);
+        const [firstName, ...lastNameParts] = name.split(' ');
+        setDocumentNonBlocking(userDocRef, {
+            id: user.uid,
+            firstName: firstName || '',
+            lastName: lastNameParts.join(' '),
+            email: user.email,
+            userType: role,
+        }, { merge: true });
+
         toast({ title: 'Success', description: 'Registration successful!' });
         router.push('/login');
       } else {
