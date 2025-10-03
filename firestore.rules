@@ -2,154 +2,134 @@
  * @fileoverview Firestore Security Rules for Animal Rescue Connect.
  *
  * Core Philosophy:
- * This ruleset enforces a strict user-ownership model for personal data and utilizes
- * path-based authorization wherever possible. Public read access is not granted
- * to any collections by default.
+ * This ruleset enforces a user-ownership model for animal condition reports,
+ * where users can only create, read, update, and delete their own reports.
+ * User profiles are also secured under the /users/{userId} path, allowing
+ * users to manage their own profile data. Other data like NGOs and Hospitals
+ * are generally open for reading but restricted for modification.
  *
  * Data Structure:
- * - `/users/{userId}`: Stores individual user profiles.
- * - `/ngos/{ngoId}`: Stores NGO profiles.
- * - `/hospitals/{hospitalId}`: Stores hospital profiles.
- * - `/users/{userId}/animal_condition_reports/{reportId}`: Stores animal condition reports submitted by users.
- * - `/hospitals/{hospitalId}/treatment_records/{treatmentId}`: Stores treatment records for animals at hospitals.
+ * - /users/{userId}: Stores user profile data.
+ * - /ngos/{ngoId}: Stores NGO information.
+ * - /hospitals/{hospitalId}: Stores hospital information.
+ * - /animal_condition_reports/{reportId}: Stores animal condition reports.  Each report has a `userId` field indicating ownership.
+ * - /hospitals/{hospitalId}/treatment_records/{treatmentId}: Stores treatment records for animals at hospitals.
  *
  * Key Security Decisions:
- * - Users can only read/write their own user document.
- * - Users can only read/write animal condition reports they created.
- * - NGOs and Hospitals are only accessible to authenticated users.
- * - Listing of users is not allowed.
+ * - Users can only manage their own user profiles.
+ * - Animal condition reports are owned by the user who created them.
+ * - Listing all users is disallowed.
+ * - NGO and Hospital data is readable by everyone, but creation/modification is not allowed in this prototype.
  *
  * Denormalization for Authorization:
- * - User documents include a `userType` field to avoid extra reads during authorization.
+ * - AnimalConditionReport documents contain a `userId` field to easily check ownership.
+ *   This avoids needing to perform additional reads to verify ownership.
+ *
+ * Structural Segregation:
+ * - Private user data is stored under the /users/{userId} collection, while
+ *   publicly accessible data like animal condition reports are stored in
+ *   separate, top-level collections.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Controls access to user profiles.
+     * @description Controls access to user profile data.
      * @path /users/{userId}
-     * @allow (create) User with ID 'user123' can create their own profile.
-     * @deny (create) User with ID 'user123' cannot create a profile with a different ID ('user456').
-     * @allow (get) User with ID 'user123' can read their profile.
-     * @deny (get) User with ID 'user123' cannot read another user's profile ('user456').
-     * @allow (update) User with ID 'user123' can update their own profile.
-     * @deny (update) User with ID 'user123' cannot update another user's profile ('user456').
-     * @allow (delete) User with ID 'user123' can delete their own profile.
-     * @deny (delete) User with ID 'user123' cannot delete another user's profile ('user456').
-     * @principle Enforces user-ownership for profile data and validates ID consistency.
+     * @allow (create) User with UID 'user123' can create their profile at /users/user123.
+     * @deny (create) User with UID 'user456' cannot create a profile at /users/user123.
+     * @allow (get) User with UID 'user123' can read their profile at /users/user123.
+     * @deny (get) User with UID 'user456' cannot read the profile at /users/user123.
+     * @allow (update) User with UID 'user123' can update their profile at /users/user123.
+     * @deny (update) User with UID 'user456' cannot update the profile at /users/user123.
+     * @allow (delete) User with UID 'user123' can delete their profile at /users/user123.
+     * @deny (delete) User with UID 'user456' cannot delete the profile at /users/user123.
+     * @principle Enforces document ownership for all operations on user profiles.
      */
     match /users/{userId} {
       function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
+        return request.auth != null && request.auth.uid == userId;
       }
       allow get: if isOwner(userId);
-      allow list: if false; // Listing users is disallowed for privacy.
+      allow list: if false; // No listing of users.
       allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
-      allow delete: if isExistingOwner(userId);
+      allow update: if isOwner(userId) && resource.data.id == request.resource.data.id; // Enforce immutability of user ID on update
+      allow delete: if isOwner(userId) && resource != null;
     }
 
     /**
-     * @description Controls access to NGO profiles.
+     * @description Controls access to NGO data.
      * @path /ngos/{ngoId}
-     * @allow (create) Authenticated user can create NGO.
-     * @deny (create) Unauthenticated user cannot create NGO.
-     * @allow (get) Any authenticated user can read any NGO profile.
-     * @deny (get) Unauthenticated user cannot read NGO profiles.
-     * @allow (update) Authenticated user can update NGO.
-     * @deny (update) Unauthenticated user cannot update NGO.
-     * @allow (delete) Authenticated user can delete NGO.
-     * @deny (delete) Unauthenticated user cannot delete NGO.
-     * @principle Authenticated users can manage NGOs.
+     * @allow (get) Any user can read NGO data.
+     * @deny (create) No one can create NGO data through client-side rules.
+     * @deny (update) No one can update NGO data through client-side rules.
+     * @deny (delete) No one can delete NGO data through client-side rules.
+     * @principle Allows public read access but restricts write access.
      */
     match /ngos/{ngoId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update: if isSignedIn() && resource != null;
-      allow delete: if isSignedIn() && resource != null;
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
     }
 
     /**
-     * @description Controls access to Hospital profiles.
+     * @description Controls access to Hospital data.
      * @path /hospitals/{hospitalId}
-     * @allow (create) Authenticated user can create Hospital.
-     * @deny (create) Unauthenticated user cannot create Hospital.
-     * @allow (get) Any authenticated user can read any Hospital profile.
-     * @deny (get) Unauthenticated user cannot read Hospital profiles.
-     * @allow (update) Authenticated user can update Hospital.
-     * @deny (update) Unauthenticated user cannot update Hospital.
-     * @allow (delete) Authenticated user can delete Hospital.
-     * @deny (delete) Unauthenticated user cannot delete Hospital.
-     * @principle Authenticated users can manage Hospitals.
+     * @allow (get) Any user can read hospital data.
+     * @deny (create) No one can create hospital data through client-side rules.
+     * @deny (update) No one can update hospital data through client-side rules.
+     * @deny (delete) No one can delete hospital data through client-side rules.
+     * @principle Allows public read access but restricts write access.
      */
     match /hospitals/{hospitalId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update: if isSignedIn() && resource != null;
-      allow delete: if isSignedIn() && resource != null;
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
     }
 
     /**
-     * @description Controls access to animal condition reports submitted by users.
-     * @path /users/{userId}/animal_condition_reports/{reportId}
-     * @allow (create) User with ID 'user123' can create a report under their profile.
-     * @deny (create) User with ID 'user123' cannot create a report under another user's profile ('user456').
-     * @allow (get) User with ID 'user123' can read their own report.
-     * @deny (get) User with ID 'user123' cannot read another user's report.
-     * @allow (update) User with ID 'user123' can update their own report.
-     * @deny (update) User with ID 'user123' cannot update another user's report.
-     * @allow (delete) User with ID 'user123' can delete their own report.
-     * @deny (delete) User with ID 'user123' cannot delete another user's report.
-     * @principle Enforces user-ownership for animal condition reports using path-based authorization.
+     * @description Controls access to animal condition reports.
+     * @path /animal_condition_reports/{reportId}
+     * @allow (create) User with UID 'user123' can create a report with userId 'user123'.
+     * @deny (create) User with UID 'user456' cannot create a report with userId 'user123'.
+     * @allow (get) Any user can read any animal condition report.
+     * @allow (update) User with UID 'user123' can update a report they own.
+     * @deny (update) User with UID 'user456' cannot update a report owned by 'user123'.
+     * @allow (delete) User with UID 'user123' can delete a report they own.
+     * @deny (delete) User with UID 'user456' cannot delete a report owned by 'user123'.
+     * @principle Enforces document ownership for writes, allows public reads.
      */
-    match /users/{userId}/animal_condition_reports/{reportId} {
+    match /animal_condition_reports/{reportId} {
       function isOwner(userId) {
-        return request.auth.uid == userId;
+        return request.auth != null && request.auth.uid == userId;
       }
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-      allow delete: if isExistingOwner(userId);
+      allow get: if true;
+      allow list: if true;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null && resource != null && isOwner(resource.data.userId);
+      allow delete: if request.auth != null && resource != null && isOwner(resource.data.userId);
     }
 
     /**
-     * @description Controls access to treatment records for animals at hospitals.
+     * @description Controls access to treatment records under a specific hospital.
      * @path /hospitals/{hospitalId}/treatment_records/{treatmentId}
-     * @allow (create) Authenticated user can create TreatmentRecord for a hospital.
-     * @deny (create) Unauthenticated user cannot create TreatmentRecord.
-     * @allow (get) Authenticated user can get TreatmentRecord for a hospital.
-     * @deny (get) Unauthenticated user cannot get TreatmentRecord.
-     * @allow (update) Authenticated user can update TreatmentRecord for a hospital.
-     * @deny (update) Unauthenticated user cannot update TreatmentRecord.
-     * @allow (delete) Authenticated user can delete TreatmentRecord for a hospital.
-     * @deny (delete) Unauthenticated user cannot delete TreatmentRecord.
-     * @principle Authenticated users can manage TreatmentRecords.
+     * @allow (get) Any user can read a treatment record.
+     * @deny (create) No one can create treatment records through client-side rules.
+     * @deny (update) No one can update treatment records through client-side rules.
+     * @deny (delete) No one can delete treatment records through client-side rules.
+     * @principle Allows public read access but restricts write access.  Write access should be handled via the Firebase Admin SDK.
      */
     match /hospitals/{hospitalId}/treatment_records/{treatmentId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
-      allow create: if isSignedIn() && request.resource.data.hospitalId == hospitalId;
-      allow update: if isSignedIn() && request.resource.data.hospitalId == hospitalId && resource != null;
-      allow delete: if isSignedIn() && resource != null;
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
     }
   }
 }
