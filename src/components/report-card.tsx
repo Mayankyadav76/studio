@@ -19,8 +19,8 @@ interface ReportCardProps {
 }
 
 export function ReportCard({ report }: ReportCardProps) {
-    // Use reportDate for time ago calculation
-    const timeAgo = formatDistanceToNow(new Date(report.reportDate), { addSuffix: true });
+    // Ensure reportDate is a valid date string before creating a Date object.
+    const timeAgo = report.reportDate ? formatDistanceToNow(new Date(report.reportDate), { addSuffix: true }) : 'Just now';
 
   return (
     <Card className="flex flex-col hover:shadow-lg transition-shadow duration-300">
