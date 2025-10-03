@@ -51,7 +51,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     return doc(firestore, "users", authUser.uid);
   }, [firestore, authUser]);
 
-  const { data: userProfile, isLoading: profileLoading } = useDoc<{ userType: string }>(userDocRef);
+  const { data: userProfile, isLoading: profileLoading } = useDoc<{ userType: string, firstName?: string }>(userDocRef);
   
   const loading = authLoading || profileLoading;
 
@@ -61,7 +61,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       router.push('/');
     }
   };
-
+  
   const currentRole = userProfile?.userType || 'user';
   const availableMenuItems = menuItems.filter(item => item.roles.includes(currentRole));
   
@@ -83,10 +83,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   }
 
   if (authError || !authUser) {
-    // Redirect to login if not authenticated
-    if (typeof window !== "undefined") {
-      router.push('/login');
-    }
+    // This part runs on the client, so window is available.
+    router.push('/login');
     return null; // Render nothing while redirecting
   }
 
@@ -143,7 +141,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         <header className="flex items-center justify-between p-4 border-b">
             <SidebarTrigger />
             <h1 className="font-headline text-2xl font-bold">
-              {menuItems.find(item => item.href === pathname)?.label || 'Dashboard'}
+              {availableMenuItems.find(item => item.href === pathname)?.label || 'Dashboard'}
             </h1>
             <div className="w-7 h-7"></div>
         </header>

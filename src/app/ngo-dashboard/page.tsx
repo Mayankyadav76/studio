@@ -1,5 +1,4 @@
 'use client';
-import { DashboardLayout } from "@/components/dashboard-layout";
 import { ReportList } from "@/components/report-list";
 import { useCollection, useFirestore } from "@/firebase";
 import { collection, query, orderBy } from "firebase/firestore";
@@ -14,17 +13,15 @@ export default function NGODashboardPage() {
 
   const reportsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    // Order by reportDate, which is a consistent ISO string.
     return query(collection(firestore, "animal_condition_reports"), orderBy("reportDate", "desc"));
   }, [firestore]);
   
   const { data: reports, isLoading, error } = useCollection<Report>(reportsQuery);
 
-  // The timestamp is now reportDate and is already a string. No conversion needed.
   const formattedReports = reports || [];
 
   return (
-    <DashboardLayout>
+    <>
       {isLoading && (
          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mt-4">
             {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-96 w-full" />)}
@@ -42,6 +39,6 @@ export default function NGODashboardPage() {
       {!isLoading && !error && (
         <ReportList reports={formattedReports} />
       )}
-    </DashboardLayout>
+    </>
   );
 }
