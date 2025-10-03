@@ -1,12 +1,12 @@
 
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { collection, serverTimestamp } from 'firebase/firestore';
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { Terminal } from 'lucide-react';
-import { useUser, useFirestore } from '@/firebase';
+import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
 import { prioritizeUrgentReports } from '@/ai/flows/prioritize-urgent-reports';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from './ui/form';
 
@@ -30,7 +30,6 @@ type ReportFormValues = z.infer<typeof ReportSchema>;
 export function ReportForm() {
   const { user } = useUser();
   const firestore = useFirestore();
-  const formRef = useRef<HTMLFormElement>(null);
   const { toast } = useToast();
   const [submissionError, setSubmissionError] = useState<string | null>(null);
 
@@ -44,11 +43,11 @@ export function ReportForm() {
   });
 
   // Keep defaultValues in sync with user email
-  useState(() => {
+  useEffect(() => {
     if (user?.email) {
       form.reset({ reporterContact: user.email });
     }
-  });
+  }, [user, form]);
 
   const onSubmit = async (values: ReportFormValues) => {
     if (!user || !firestore) {
@@ -56,6 +55,7 @@ export function ReportForm() {
       return;
     }
     setSubmissionError(null);
+    form.clearErrors();
 
     try {
       // 1. Get AI Assessment
@@ -80,9 +80,9 @@ export function ReportForm() {
         reason: aiResponse.reason,
       };
 
-      // 3. Save to Firestore
-      const reportsCollection = collection(firestore, 'reports');
-      await addDoc(reportsCollection, reportData);
+      // 3. Save to Firestore using the non-blocking helper
+      const reportsCollection = collection(firestore, 'animal_condition_reports');
+      addDocumentNonBlocking(reportsCollection, reportData);
 
       // 4. Show success and reset form
       toast({
@@ -91,15 +91,18 @@ export function ReportForm() {
       });
       form.reset();
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting report:', error);
-      setSubmissionError('An error occurred while submitting the report. Please try again.');
+      // The addDocumentNonBlocking function will use the errorEmitter,
+      // which is caught by FirebaseErrorListener.
+      // We can also show a fallback error message here.
+      setSubmissionError(error.message || 'An error occurred while submitting the report. The error has been logged.');
     }
   };
 
   return (
     <Form {...form}>
-      <form ref={formRef} onSubmit={form.handleSubmit(onSubmit)} noValidate>
+      <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
         <Card className="w-full max-w-2xl mx-auto">
           <CardHeader>
             <CardTitle className="font-headline text-3xl">Report an Animal in Need</CardTitle>

@@ -1,4 +1,5 @@
 
+
 'use client';
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { ReportList } from "@/components/report-list";
@@ -15,7 +16,7 @@ export default function NGODashboardPage() {
 
   const reportsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    return query(collection(firestore, "reports"), orderBy("timestamp", "desc"));
+    return query(collection(firestore, "animal_condition_reports"), orderBy("timestamp", "desc"));
   }, [firestore]);
   
   const { data: reports, isLoading, error } = useCollection<Report>(reportsQuery);
