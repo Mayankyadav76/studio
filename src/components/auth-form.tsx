@@ -38,7 +38,7 @@ import {
   signInWithEmailAndPassword,
 } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
-import { doc } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 
 const registerSchema = z
   .object({
@@ -82,7 +82,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       email: '',
       password: '',
       confirmPassword: '',
-      role: 'user',
+      role: 'user' as 'user' | 'ngo' | 'hospital',
     },
   });
 
@@ -116,9 +116,28 @@ export function AuthForm({ mode }: AuthFormProps) {
         router.push('/login');
       } else {
         const { email, password } = values as z.infer<typeof loginSchema>;
-        await signInWithEmailAndPassword(auth, email, password);
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        
+        // Fetch user document to get the role
+        const userDocRef = doc(firestore, 'users', userCredential.user.uid);
+        const userDoc = await getDoc(userDocRef);
+
         toast({ title: 'Success', description: 'Login successful!' });
-        router.push('/dashboard');
+
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          const userType = userData.userType;
+          if (userType === 'ngo') {
+            router.push('/ngo-dashboard');
+          } else if (userType === 'hospital') {
+            router.push('/hospital-dashboard');
+          } else {
+            router.push('/dashboard');
+          }
+        } else {
+          // Default redirect if user doc doesn't exist for some reason
+          router.push('/dashboard');
+        }
       }
     } catch (error: any) {
         let errorMessage = 'An unexpected error occurred.';
